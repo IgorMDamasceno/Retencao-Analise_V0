@@ -287,7 +287,7 @@
     .progress-fill{
       height: 100%;
       width: 0%;
-      background: linear-gradient(90deg, rgba(34,197,94,.75), rgba(14,165,233,.95), rgba(99,102,241,.95));
+      background: linear-gradient(90deg, rgba(99,102,241,.95), rgba(45,212,191,.9));
       transition: width .3s ease;
     }
     .progress-layer{
@@ -493,14 +493,11 @@
       const acq = op.acquisition || null;
       const progress = op.progress || { total: 0, acquisitionShare: 0, automationShare: 0, hasData: false };
 
-      const totalRev = (a.revenue || 0) + (b.revenue || 0);
-      const totalSess = (a.sessions || 0) + (b.sessions || 0);
-
       return `
         <div class="opcard" data-op="${escapeHtml(op.operation || '')}">
           <div class="ophead">
             <div class="opname">${escapeHtml(op.operation || '')}</div>
-            <div class="opsum">${fmtUSD.format(totalRev)} · ${fmtInt.format(totalSess)} sess</div>
+            <div class="opsum"></div>
           </div>
 
           <div class="sections">
