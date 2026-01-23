@@ -22,7 +22,12 @@ function getOpsDashboardData(params) {
   var operationsByName = snapshot.operationsByName || {};
   var trafficByType = snapshot.trafficByType || {};
   var revshareMap = snapshot.revshareMap || {};
-  var acquisitionMap = getAcquisitionData_();
+  var acquisitionMap = {};
+  try {
+    acquisitionMap = getAcquisitionData_();
+  } catch (err) {
+    acquisitionMap = {};
+  }
 
   var trafficTypes = ['Automação', 'Broadcast'];
 
