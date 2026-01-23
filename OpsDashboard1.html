@@ -211,12 +211,12 @@
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .kpi .val{
-      font-size: clamp(12px, 1.6vw, 14px);
+      font-size: clamp(11px, 1.4vw, 14px);
       font-weight:900;
       letter-spacing:.2px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      white-space: normal;
+      word-break: break-word;
+      line-height: 1.1;
     }
     .kpi .sub{
       font-size:11px;color:var(--muted);margin-top:2px;
@@ -275,12 +275,19 @@
       border-radius: 999px;
       background: rgba(15,23,42,.6);
       border: 1px solid rgba(255,255,255,.08);
+      overflow: visible;
+    }
+    .progress-inner{
+      position: relative;
+      height: 100%;
+      width: 100%;
+      border-radius: inherit;
       overflow: hidden;
     }
     .progress-fill{
       height: 100%;
       width: 0%;
-      background: linear-gradient(90deg, rgba(99,102,241,.55), rgba(59,130,246,.85));
+      background: linear-gradient(90deg, rgba(56,189,248,.6), rgba(59,130,246,.85));
       transition: width .3s ease;
     }
     .progress-layer{
@@ -599,13 +606,15 @@
             <span class="progress-segment auto">Automação ${autoLabel}</span>
           </div>
           <div class="progress-track">
-            <div class="progress-layer">
-              <span class="acq-part" style="width:${(acqMark * 100).toFixed(2)}%"></span>
-              <span class="auto-part" style="width:${(Math.max(0, Math.min(1, autoShare)) * 100).toFixed(2)}%"></span>
+            <div class="progress-inner">
+              <div class="progress-layer">
+                <span class="acq-part" style="width:${(acqMark * 100).toFixed(2)}%"></span>
+                <span class="auto-part" style="width:${(Math.max(0, Math.min(1, autoShare)) * 100).toFixed(2)}%"></span>
+              </div>
+              <div class="progress-fill" style="width:${(clampedTotal * 100).toFixed(2)}%"></div>
+              <span class="progress-marker" style="left:${(acqMark * 100).toFixed(2)}%"></span>
+              <span class="progress-marker auto" style="left:${(autoMark * 100).toFixed(2)}%"></span>
             </div>
-            <div class="progress-fill" style="width:${(clampedTotal * 100).toFixed(2)}%"></div>
-            <span class="progress-marker" style="left:${(acqMark * 100).toFixed(2)}%"></span>
-            <span class="progress-marker auto" style="left:${(autoMark * 100).toFixed(2)}%"></span>
             <span class="progress-total" style="left:${(totalLeft * 100).toFixed(2)}%">${totalPercent}</span>
           </div>
         </div>
