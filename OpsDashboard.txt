@@ -176,9 +176,19 @@ function getOpsDashboardData(params) {
 }
 
 function getAcquisitionData_() {
+  var cache = CacheService.getScriptCache();
+  var cacheKey = 'OPS_DASH_ACQ_V1';
+  var cached = cache.get(cacheKey);
+  if (cached) {
+    return JSON.parse(cached);
+  }
+
   var sheet = SpreadsheetApp.getActive().getSheetByName('Dados aquisição');
   if (!sheet) return {};
-  var values = sheet.getDataRange().getValues();
+  var lastRow = sheet.getLastRow();
+  var lastColumn = sheet.getLastColumn();
+  if (lastRow < 2 || lastColumn < 1) return {};
+  var values = sheet.getRange(1, 1, lastRow, lastColumn).getValues();
   if (!values || values.length < 2) return {};
 
   var headers = values[0].map(function (h) { return String(h).trim(); });
@@ -224,6 +234,7 @@ function getAcquisitionData_() {
     };
   });
 
+  cache.put(cacheKey, JSON.stringify(map), 300);
   return map;
 }
 
