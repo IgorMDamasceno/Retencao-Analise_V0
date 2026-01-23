@@ -210,7 +210,14 @@
       font-size:11px;color:var(--muted);margin-bottom:6px;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    .kpi .val{font-size:14px;font-weight:900;letter-spacing:.2px}
+    .kpi .val{
+      font-size: clamp(12px, 1.6vw, 14px);
+      font-weight:900;
+      letter-spacing:.2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
     .kpi .sub{
       font-size:11px;color:var(--muted);margin-top:2px;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -273,11 +280,8 @@
     .progress-fill{
       height: 100%;
       width: 0%;
-      background: linear-gradient(90deg, rgba(248,113,113,.65), rgba(220,38,38,.85));
+      background: linear-gradient(90deg, rgba(99,102,241,.55), rgba(59,130,246,.85));
       transition: width .3s ease;
-    }
-    .progress-fill.good{
-      background: linear-gradient(90deg, rgba(74,222,128,.85), rgba(22,163,74,.9));
     }
     .progress-layer{
       position:absolute;
@@ -305,6 +309,18 @@
     }
     .progress-marker.auto{
       background: rgba(191,219,254,.9);
+    }
+    .progress-total{
+      position:absolute;
+      top:-22px;
+      font-size:11px;
+      color: var(--text);
+      background: rgba(15,23,42,.7);
+      border: 1px solid rgba(255,255,255,.15);
+      padding:2px 6px;
+      border-radius: 999px;
+      transform: translateX(-50%);
+      white-space: nowrap;
     }
     .footerline{
       margin-top:12px;
@@ -398,7 +414,7 @@
     const fmtUSD = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
     const fmtBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 2 });
     const fmtInt = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 });
-    const fmtRps = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+    const fmtRps = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const fmtPercent = new Intl.NumberFormat('pt-BR', { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
     function setStatus(ok, text) {
@@ -566,9 +582,11 @@
       const acqMark = Math.max(0, Math.min(1, acqShare));
       const autoMark = Math.max(0, Math.min(1, acqShare + autoShare));
       const percentLabel = hasData ? fmtPercent.format(clampedTotal) : 'Sem dados';
-      const fillClass = clampedTotal >= 0.9 ? 'progress-fill good' : 'progress-fill';
       const acqLabel = hasData ? fmtPercent.format(Math.max(0, Math.min(1, acqShare))) : '—';
       const autoLabel = hasData ? fmtPercent.format(Math.max(0, Math.min(1, autoShare))) : '—';
+      const totalPercent = hasData ? fmtPercent.format(total) : '—';
+      const totalMarker = Math.max(0, Math.min(1, total));
+      const totalLeft = total <= 1 ? totalMarker : 1;
 
       return `
         <div class="progress-wrap">
@@ -585,9 +603,10 @@
               <span class="acq-part" style="width:${(acqMark * 100).toFixed(2)}%"></span>
               <span class="auto-part" style="width:${(Math.max(0, Math.min(1, autoShare)) * 100).toFixed(2)}%"></span>
             </div>
-            <div class="${fillClass}" style="width:${(clampedTotal * 100).toFixed(2)}%"></div>
+            <div class="progress-fill" style="width:${(clampedTotal * 100).toFixed(2)}%"></div>
             <span class="progress-marker" style="left:${(acqMark * 100).toFixed(2)}%"></span>
             <span class="progress-marker auto" style="left:${(autoMark * 100).toFixed(2)}%"></span>
+            <span class="progress-total" style="left:${(totalLeft * 100).toFixed(2)}%">${totalPercent}</span>
           </div>
         </div>
       `;
