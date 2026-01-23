@@ -220,6 +220,44 @@
       color: var(--muted);
       padding:8px 4px 2px;
     }
+    .progress-wrap{
+      padding:0 12px 14px;
+    }
+    .progress-label{
+      display:flex;
+      justify-content:space-between;
+      font-size:12px;
+      color: var(--muted);
+      margin-bottom:6px;
+    }
+    .progress-track{
+      position: relative;
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(15,23,42,.6);
+      border: 1px solid rgba(255,255,255,.08);
+      overflow: hidden;
+    }
+    .progress-fill{
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, rgba(248,113,113,.65), rgba(220,38,38,.85));
+      transition: width .3s ease;
+    }
+    .progress-fill.good{
+      background: linear-gradient(90deg, rgba(239,68,68,.9), rgba(185,28,28,.9));
+    }
+    .progress-marker{
+      position:absolute;
+      top:-4px;
+      width:2px;
+      height:20px;
+      background: rgba(248,250,252,.75);
+      box-shadow: 0 0 6px rgba(248,250,252,.35);
+    }
+    .progress-marker.auto{
+      background: rgba(191,219,254,.9);
+    }
     .footerline{
       margin-top:12px;
       padding:0 2px;
@@ -379,6 +417,7 @@
       const a = op.automacao || { sessions: 0, revenue: 0, rps: 0 };
       const b = op.broadcast || { sessions: 0, revenue: 0, rps: 0 };
       const acq = op.acquisition || null;
+      const progress = op.progress || { total: 0, acquisitionShare: 0, automationShare: 0, hasData: false };
 
       const totalRev = (a.revenue || 0) + (b.revenue || 0);
       const totalSess = (a.sessions || 0) + (b.sessions || 0);
@@ -395,6 +434,7 @@
             ${sectionHtml('Automação', a, 'section--auto')}
             ${sectionHtml('Broadcast', b, 'section--broadcast')}
           </div>
+          ${progressHtml(progress)}
         </div>
       `;
     }
@@ -414,17 +454,14 @@
             <div class="kpi">
               <div class="lbl">Sessões</div>
               <div class="val">${fmtInt.format(sessions)}</div>
-              <div class="sub">requests de interstitial</div>
             </div>
             <div class="kpi">
               <div class="lbl">Receita</div>
               <div class="val">${fmtUSD.format(revenue)}</div>
-              <div class="sub">ajustada por revshare</div>
             </div>
             <div class="kpi">
               <div class="lbl">RPS</div>
               <div class="val">${fmtRps.format(rps)}</div>
-              <div class="sub">revenue / sessions</div>
             </div>
           </div>
         </div>
@@ -458,18 +495,41 @@
             <div class="kpi">
               <div class="lbl">Gasto (R$)</div>
               <div class="val">${fmtBRL.format(spend)}</div>
-              <div class="sub">investimento total</div>
             </div>
             <div class="kpi">
               <div class="lbl">Receita (R$)</div>
               <div class="val">${fmtBRL.format(revenue)}</div>
-              <div class="sub">retorno bruto</div>
             </div>
             <div class="kpi">
               <div class="lbl">ROAS (%)</div>
               <div class="val">${fmtPercent.format(roas)}</div>
-              <div class="sub">((receita / gasto) - 1)</div>
             </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function progressHtml(progress) {
+      const total = Number(progress.total || 0);
+      const acqShare = Number(progress.acquisitionShare || 0);
+      const autoShare = Number(progress.automationShare || 0);
+      const hasData = !!progress.hasData;
+      const clampedTotal = Math.max(0, Math.min(1, total));
+      const acqMark = Math.max(0, Math.min(1, acqShare));
+      const autoMark = Math.max(0, Math.min(1, acqShare + autoShare));
+      const percentLabel = hasData ? fmtPercent.format(clampedTotal) : 'Sem dados';
+      const fillClass = clampedTotal >= 0.9 ? 'progress-fill good' : 'progress-fill';
+
+      return `
+        <div class="progress-wrap">
+          <div class="progress-label">
+            <span>Progresso</span>
+            <span>${percentLabel}</span>
+          </div>
+          <div class="progress-track">
+            <div class="${fillClass}" style="width:${(clampedTotal * 100).toFixed(2)}%"></div>
+            <span class="progress-marker" style="left:${(acqMark * 100).toFixed(2)}%"></span>
+            <span class="progress-marker auto" style="left:${(autoMark * 100).toFixed(2)}%"></span>
           </div>
         </div>
       `;

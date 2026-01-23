@@ -2,6 +2,7 @@ function getOpsDashboardData(params) {
   params = params || {};
   var dateMode = String(params.dateMode || 'today').toLowerCase();
   var allowFallback = params.allowFallback !== false;
+  var usdToBrlRate = 5.30;
 
   var tz = Session.getScriptTimeZone();
   var today = startOfDay_(new Date());
@@ -148,9 +149,11 @@ function getOpsDashboardData(params) {
     var a = agg[op]['Automação'] || { sessions: 0, revenue: 0 };
     var b = agg[op]['Broadcast'] || { sessions: 0, revenue: 0 };
     var acquisition = acquisitionMap[op] || null;
+    var progress = buildAcquisitionProgress_(acquisition, a.revenue || 0, usdToBrlRate);
     return {
       operation: op,
       acquisition: acquisition,
+      progress: progress,
       automacao: {
         sessions: a.sessions,
         revenue: a.revenue,
@@ -173,6 +176,27 @@ function getOpsDashboardData(params) {
   var response = buildOpsDashResponse_(targetDate, tz, out);
   cache.put(cacheKey, JSON.stringify(response), 60);
   return response;
+}
+
+function buildAcquisitionProgress_(acquisition, automationRevenueUsd, usdToBrlRate) {
+  if (!acquisition || !acquisition.hasData) {
+    return { total: 0, acquisitionShare: 0, automationShare: 0, hasData: false };
+  }
+  var spend = toNumber_(acquisition.spend);
+  if (spend <= 0) {
+    return { total: 0, acquisitionShare: 0, automationShare: 0, hasData: false };
+  }
+  var acquisitionRevenue = toNumber_(acquisition.revenue);
+  var automationRevenueBrl = (toNumber_(automationRevenueUsd) || 0) * (usdToBrlRate || 0);
+  var total = (acquisitionRevenue + automationRevenueBrl) / spend;
+  var acquisitionShare = acquisitionRevenue / spend;
+  var automationShare = automationRevenueBrl / spend;
+  return {
+    total: total,
+    acquisitionShare: acquisitionShare,
+    automationShare: automationShare,
+    hasData: true
+  };
 }
 
 function getAcquisitionData_() {
