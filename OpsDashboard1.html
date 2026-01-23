@@ -23,6 +23,8 @@
       --accent-strong: rgba(96,165,250,.55);
       --violet: rgba(167,139,250,.35);
       --emerald: rgba(52,211,153,.35);
+      --amber: rgba(251,191,36,.35);
+      --rose: rgba(244,114,182,.28);
     }
     *{box-sizing:border-box}
     body{
@@ -114,25 +116,30 @@
     .ophead{
       display:flex;align-items:center;justify-content:space-between;
       padding:14px 14px;
-      background: rgba(255,255,255,.04);
+      background: linear-gradient(120deg, rgba(15,23,42,.85), rgba(30,41,59,.6));
       border-bottom:1px solid var(--border);
       gap:10px;
     }
     .opname{
-      font-weight:800;
-      letter-spacing:.2px;
-      font-size:14px;
+      font-weight:900;
+      letter-spacing:.3px;
+      font-size:16px;
       line-height:1.2;
       word-break: break-word;
+      color: #f8fafc;
+      text-shadow: 0 6px 18px rgba(96,165,250,.25);
     }
     .opsum{
       font-size:12px;color:var(--muted);white-space:nowrap;
     }
     .sections{
       display:grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap:12px;
       padding:12px 12px 14px;
+    }
+    @media (max-width: 980px){
+      .sections{grid-template-columns: repeat(2, minmax(0, 1fr))}
     }
     @media (max-width: 520px){
       .sections{grid-template-columns:1fr}
@@ -153,19 +160,24 @@
       border-color: rgba(52,211,153,.25);
       box-shadow: inset 0 0 0 1px rgba(52,211,153,.08);
     }
+    .section--acq{
+      border-color: rgba(251,191,36,.32);
+      box-shadow: inset 0 0 0 1px rgba(251,191,36,.12);
+    }
     .section .title{
       display:flex;align-items:center;justify-content:space-between;
       margin-bottom:10px;
     }
     .tag{
-      font-size:11px;
+      font-size:12px;
       color: var(--text);
       padding:6px 10px;
       border-radius:999px;
       border:1px solid var(--border);
       background: rgba(255,255,255,.08);
       font-weight:700;
-      letter-spacing:.25px;
+      letter-spacing:.35px;
+      text-transform: uppercase;
     }
     .section--auto .tag{
       background: rgba(96,165,250,.18);
@@ -176,6 +188,11 @@
       background: rgba(52,211,153,.18);
       border-color: rgba(52,211,153,.35);
       color: #dcfce7;
+    }
+    .section--acq .tag{
+      background: rgba(251,191,36,.18);
+      border-color: rgba(251,191,36,.35);
+      color: #fef3c7;
     }
     .kpis{
       display:grid;
@@ -197,6 +214,11 @@
     .kpi .sub{
       font-size:11px;color:var(--muted);margin-top:2px;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .acq-empty{
+      font-size:12px;
+      color: var(--muted);
+      padding:8px 4px 2px;
     }
     .footerline{
       margin-top:12px;
@@ -288,8 +310,10 @@
     let rawData = null;
 
     const fmtUSD = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
+    const fmtBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 2 });
     const fmtInt = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 });
     const fmtRps = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+    const fmtPercent = new Intl.NumberFormat('pt-BR', { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
     function setStatus(ok, text) {
       els.statusDot.classList.toggle('err', !ok);
@@ -308,6 +332,17 @@
             </div>
           </div>
           <div class="sections">
+            <div class="section">
+              <div class="title">
+                <span class="tag">Aquisição</span>
+                <div class="skeleton" style="height:12px;width:50px"></div>
+              </div>
+              <div class="kpis">
+                <div class="kpi"><div class="skeleton" style="height:12px;width:70%"></div><div class="skeleton" style="height:16px;width:90%;margin-top:8px"></div></div>
+                <div class="kpi"><div class="skeleton" style="height:12px;width:70%"></div><div class="skeleton" style="height:16px;width:90%;margin-top:8px"></div></div>
+                <div class="kpi"><div class="skeleton" style="height:12px;width:70%"></div><div class="skeleton" style="height:16px;width:90%;margin-top:8px"></div></div>
+              </div>
+            </div>
             <div class="section">
               <div class="title">
                 <span class="tag">Automação</span>
@@ -343,6 +378,7 @@
     function opCard(op) {
       const a = op.automacao || { sessions: 0, revenue: 0, rps: 0 };
       const b = op.broadcast || { sessions: 0, revenue: 0, rps: 0 };
+      const acq = op.acquisition || null;
 
       const totalRev = (a.revenue || 0) + (b.revenue || 0);
       const totalSess = (a.sessions || 0) + (b.sessions || 0);
@@ -355,6 +391,7 @@
           </div>
 
           <div class="sections">
+            ${acquisitionHtml(acq)}
             ${sectionHtml('Automação', a, 'section--auto')}
             ${sectionHtml('Broadcast', b, 'section--broadcast')}
           </div>
@@ -388,6 +425,50 @@
               <div class="lbl">RPS</div>
               <div class="val">${fmtRps.format(rps)}</div>
               <div class="sub">revenue / sessions</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function acquisitionHtml(data) {
+      if (!data || !data.hasData) {
+        return `
+          <div class="section section--acq">
+            <div class="title">
+              <span class="tag">Aquisição</span>
+              <span class="muted" style="font-size:12px;">&nbsp;</span>
+            </div>
+            <div class="acq-empty">Sem dados</div>
+          </div>
+        `;
+      }
+
+      const spend = Number(data.spend || 0);
+      const revenue = Number(data.revenue || 0);
+      const roas = Number(data.roas || 0);
+
+      return `
+        <div class="section section--acq">
+          <div class="title">
+            <span class="tag">Aquisição</span>
+            <span class="muted" style="font-size:12px;">&nbsp;</span>
+          </div>
+          <div class="kpis">
+            <div class="kpi">
+              <div class="lbl">Gasto (R$)</div>
+              <div class="val">${fmtBRL.format(spend)}</div>
+              <div class="sub">investimento total</div>
+            </div>
+            <div class="kpi">
+              <div class="lbl">Receita (R$)</div>
+              <div class="val">${fmtBRL.format(revenue)}</div>
+              <div class="sub">retorno bruto</div>
+            </div>
+            <div class="kpi">
+              <div class="lbl">ROAS (%)</div>
+              <div class="val">${fmtPercent.format(roas)}</div>
+              <div class="sub">((receita / gasto) - 1)</div>
             </div>
           </div>
         </div>
