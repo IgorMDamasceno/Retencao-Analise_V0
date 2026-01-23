@@ -1,0 +1,177 @@
+function getOpsDashboardData(params) {
+  params = params || {};
+  var dateMode = String(params.dateMode || 'today').toLowerCase();
+  var allowFallback = params.allowFallback !== false;
+
+  var tz = Session.getScriptTimeZone();
+  var today = startOfDay_(new Date());
+  var targetDate = new Date(today.getTime());
+
+  if (dateMode === 'yesterday') {
+    targetDate.setDate(targetDate.getDate() - 1);
+  }
+
+  var cache = CacheService.getScriptCache();
+  var cacheKey = 'OPS_DASH_V1_' + Utilities.formatDate(targetDate, tz, 'yyyy-MM-dd');
+  var cached = cache.get(cacheKey);
+  if (cached) {
+    return JSON.parse(cached);
+  }
+
+  var snapshot = getConfigSnapshot_();
+  var operationsByName = snapshot.operationsByName || {};
+  var trafficByType = snapshot.trafficByType || {};
+  var revshareMap = snapshot.revshareMap || {};
+
+  var trafficTypes = ['Automação', 'Broadcast'];
+
+  var trafficSets = {};
+  trafficTypes.forEach(function (t) {
+    trafficSets[t] = buildLowerSet_(trafficByType[t] || []);
+  });
+
+  var operationNames = Object.keys(operationsByName).slice().sort();
+
+  var opMatchers = {};
+  operationNames.forEach(function (op) {
+    opMatchers[op] = buildUrlMatchers_(operationsByName[op] || []);
+  });
+
+  var sheet = SpreadsheetApp.getActive().getSheetByName(DATA_SHEET);
+  if (!sheet) throw new Error('Aba "' + DATA_SHEET + '" não encontrada.');
+
+  var values = sheet.getDataRange().getValues();
+  if (!values || values.length < 2) {
+    var empty = buildOpsDashResponse_(targetDate, tz, []);
+    cache.put(cacheKey, JSON.stringify(empty), 60);
+    return empty;
+  }
+
+  var headers = values[0].map(function (h) { return String(h).trim(); });
+  var idx = getHeaderIndexMap_(headers);
+
+  var idxData = findIndex_(idx, ['data']);
+  var idxSite = findIndex_(idx, ['site']);
+  var idxChannel = findIndex_(idx, ['canal']);
+  var idxUrl = findIndex_(idx, ['url']);
+  var idxBlock = findIndex_(idx, ['bloco', 'blocodeanuncio']);
+  var idxRequests = findIndex_(idx, ['solicitacoes', 'solicitacaoad']);
+  var idxRevenue = findIndex_(idx, ['receitausd', 'receita']);
+
+  if (idxData == null || idxSite == null || idxUrl == null) {
+    throw new Error('Planilha base está sem colunas obrigatórias (data/site/url).');
+  }
+  if (idxRequests == null || idxRevenue == null) {
+    throw new Error('Planilha base está sem colunas de solicitações ou receita.');
+  }
+
+  var targetDayStamp = startOfDay_(targetDate).getTime();
+  var agg = {};
+  operationNames.forEach(function (op) {
+    agg[op] = {};
+    trafficTypes.forEach(function (t) {
+      agg[op][t] = { sessions: 0, revenue: 0 };
+    });
+  });
+
+  var foundAnyForDay = false;
+
+  for (var r = 1; r < values.length; r++) {
+    var row = values[r];
+
+    var rowDate = parseDate_(row[idxData]);
+    if (!rowDate) continue;
+    if (startOfDay_(rowDate).getTime() !== targetDayStamp) continue;
+
+    var canal = idxChannel != null ? String(row[idxChannel] || '').trim().toLowerCase() : '';
+    if (!canal) continue;
+
+    var trafficType = '';
+    for (var tt = 0; tt < trafficTypes.length; tt++) {
+      var tName = trafficTypes[tt];
+      var set = trafficSets[tName];
+      if (set && set.size && set.has(canal)) {
+        trafficType = tName;
+        break;
+      }
+    }
+    if (!trafficType) continue;
+
+    var rawUrl = String(row[idxUrl] || '').trim();
+    if (!rawUrl) continue;
+
+    var operation = '';
+    for (var o = 0; o < operationNames.length; o++) {
+      var opName = operationNames[o];
+      if (matchUrl_(rawUrl, opMatchers[opName])) {
+        operation = opName;
+        break;
+      }
+    }
+    if (!operation) continue;
+
+    var site = String(row[idxSite] || '').trim();
+    if (!site) continue;
+
+    var block = idxBlock != null ? String(row[idxBlock] || '').trim() : '';
+    var isInterstitial = /interstitial/i.test(block);
+
+    var requests = toNumber_(row[idxRequests]) || 0;
+    var revenue = toNumber_(row[idxRevenue]) || 0;
+
+    var revshare = toNumber_(revshareMap[site] || 0) / 100;
+    var adjustedRevenue = revenue * (1 - revshare);
+
+    agg[operation][trafficType].revenue += adjustedRevenue;
+    if (isInterstitial) {
+      agg[operation][trafficType].sessions += requests;
+    }
+
+    foundAnyForDay = true;
+  }
+
+  if (!foundAnyForDay && dateMode === 'today' && allowFallback) {
+    var y = new Date(targetDate.getTime());
+    y.setDate(y.getDate() - 1);
+    var fallback = getOpsDashboardData({ dateMode: 'yesterday', allowFallback: false });
+    cache.put(cacheKey, JSON.stringify(fallback), 60);
+    return fallback;
+  }
+
+  var out = operationNames.map(function (op) {
+    var a = agg[op]['Automação'] || { sessions: 0, revenue: 0 };
+    var b = agg[op]['Broadcast'] || { sessions: 0, revenue: 0 };
+    return {
+      operation: op,
+      automacao: {
+        sessions: a.sessions,
+        revenue: a.revenue,
+        rps: computeRps_(a.revenue, a.sessions)
+      },
+      broadcast: {
+        sessions: b.sessions,
+        revenue: b.revenue,
+        rps: computeRps_(b.revenue, b.sessions)
+      }
+    };
+  });
+
+  out.sort(function (x, y) {
+    var xr = (x.automacao.revenue || 0) + (x.broadcast.revenue || 0);
+    var yr = (y.automacao.revenue || 0) + (y.broadcast.revenue || 0);
+    return yr - xr;
+  });
+
+  var response = buildOpsDashResponse_(targetDate, tz, out);
+  cache.put(cacheKey, JSON.stringify(response), 60);
+  return response;
+}
+
+function buildOpsDashResponse_(dateObj, tz, operations) {
+  return {
+    date: Utilities.formatDate(dateObj, tz, 'yyyy-MM-dd'),
+    dateLabel: Utilities.formatDate(dateObj, tz, 'dd/MM/yyyy'),
+    generatedAt: Utilities.formatDate(new Date(), tz, "yyyy-MM-dd'T'HH:mm:ss"),
+    operations: operations || []
+  };
+}
