@@ -10,10 +10,11 @@
       --bg:#0b1220;
       --card:#0f1b33;
       --card2:#0c1730;
+      --card-soft: rgba(12, 23, 48, 0.65);
       --text:#e7eefc;
       --muted:#9ab0d6;
       --border:rgba(255,255,255,.08);
-      --shadow: 0 12px 30px rgba(0,0,0,.35);
+      --shadow: 0 16px 36px rgba(0,0,0,.4);
       --radius:18px;
       --good:#22c55e;
       --warn:#f59e0b;
@@ -116,7 +117,7 @@
     .ophead{
       display:flex;align-items:center;justify-content:space-between;
       padding:14px 14px;
-      background: linear-gradient(120deg, rgba(15,23,42,.85), rgba(30,41,59,.6));
+      background: linear-gradient(120deg, rgba(15,23,42,.9), rgba(12,23,48,.65));
       border-bottom:1px solid var(--border);
       gap:10px;
     }
@@ -145,7 +146,7 @@
       .sections{grid-template-columns:1fr}
     }
     .section{
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.025));
+      background: linear-gradient(180deg, rgba(15,23,42,.55), rgba(12,23,48,.4));
       border:1px solid var(--border);
       border-radius: 16px;
       padding:12px;
@@ -201,7 +202,7 @@
     }
     .kpi{
       border:1px solid var(--border);
-      background: linear-gradient(160deg, rgba(12,23,48,.65), rgba(12,23,48,.4));
+      background: linear-gradient(160deg, var(--card-soft), rgba(12,23,48,.45));
       border-radius:14px;
       padding:10px 10px;
       min-width: 0;
@@ -252,8 +253,8 @@
       gap:6px;
       padding:2px 8px;
       border-radius:999px;
-      background: rgba(15,23,42,.5);
-      border:1px solid rgba(255,255,255,.08);
+      background: rgba(15,23,42,.6);
+      border:1px solid var(--border);
       text-transform: uppercase;
       letter-spacing: .25px;
       font-size: 10px;
@@ -273,8 +274,8 @@
       position: relative;
       height: 12px;
       border-radius: 999px;
-      background: rgba(15,23,42,.6);
-      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(15,23,42,.7);
+      border: 1px solid var(--border);
       overflow: visible;
     }
     .progress-inner{
@@ -287,7 +288,7 @@
     .progress-fill{
       height: 100%;
       width: 0%;
-      background: linear-gradient(90deg, rgba(99,102,241,.95), rgba(45,212,191,.9));
+      background: linear-gradient(90deg, rgba(96,165,250,.95), rgba(45,212,191,.88));
       transition: width .3s ease;
     }
     .progress-layer{
@@ -322,8 +323,8 @@
       top:-22px;
       font-size:11px;
       color: var(--text);
-      background: rgba(15,23,42,.7);
-      border: 1px solid rgba(255,255,255,.15);
+      background: rgba(15,23,42,.75);
+      border: 1px solid rgba(255,255,255,.2);
       padding:2px 6px;
       border-radius: 999px;
       transform: translateX(-50%);
