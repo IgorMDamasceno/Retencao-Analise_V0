@@ -35,7 +35,7 @@ const LINK_ROUTER_BATCH_TRIGGER_KEY_PREFIX = 'LINK_ROUTER_SYNC_BATCH_TRIGGER_';
 
 function doGet(e) {
   var page = (e && e.parameter && e.parameter.page) ? String(e.parameter.page) : '';
-  var file = (page === 'ops') ? 'OpsDashboar1' : 'index';
+  var file = (page === 'ops') ? 'OpsDashboard1' : 'index';
 
   return HtmlService.createTemplateFromFile(file)
     .evaluate()

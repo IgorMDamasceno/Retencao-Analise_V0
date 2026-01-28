@@ -2,6 +2,7 @@ function getOpsDashboardData(params) {
   params = params || {};
   var dateMode = String(params.dateMode || 'today').toLowerCase();
   var allowFallback = params.allowFallback !== false;
+  var usdToBrlRate = 5.30;
 
   var tz = Session.getScriptTimeZone();
   var today = startOfDay_(new Date());
@@ -22,6 +23,12 @@ function getOpsDashboardData(params) {
   var operationsByName = snapshot.operationsByName || {};
   var trafficByType = snapshot.trafficByType || {};
   var revshareMap = snapshot.revshareMap || {};
+  var acquisitionMap = {};
+  try {
+    acquisitionMap = getAcquisitionData_();
+  } catch (err) {
+    acquisitionMap = {};
+  }
 
   var trafficTypes = ['Automação', 'Broadcast'];
 
@@ -141,8 +148,12 @@ function getOpsDashboardData(params) {
   var out = operationNames.map(function (op) {
     var a = agg[op]['Automação'] || { sessions: 0, revenue: 0 };
     var b = agg[op]['Broadcast'] || { sessions: 0, revenue: 0 };
+    var acquisition = acquisitionMap[op] || null;
+    var progress = buildAcquisitionProgress_(acquisition, a.revenue || 0, usdToBrlRate);
     return {
       operation: op,
+      acquisition: acquisition,
+      progress: progress,
       automacao: {
         sessions: a.sessions,
         revenue: a.revenue,
@@ -165,6 +176,90 @@ function getOpsDashboardData(params) {
   var response = buildOpsDashResponse_(targetDate, tz, out);
   cache.put(cacheKey, JSON.stringify(response), 60);
   return response;
+}
+
+function buildAcquisitionProgress_(acquisition, automationRevenueUsd, usdToBrlRate) {
+  if (!acquisition || !acquisition.hasData) {
+    return { total: 0, acquisitionShare: 0, automationShare: 0, hasData: false };
+  }
+  var spend = toNumber_(acquisition.spend);
+  if (spend <= 0) {
+    return { total: 0, acquisitionShare: 0, automationShare: 0, hasData: false };
+  }
+  var acquisitionRevenue = toNumber_(acquisition.revenue);
+  var automationRevenueBrl = (toNumber_(automationRevenueUsd) || 0) * (usdToBrlRate || 0);
+  var total = (acquisitionRevenue + automationRevenueBrl) / spend;
+  var acquisitionShare = acquisitionRevenue / spend;
+  var automationShare = automationRevenueBrl / spend;
+  return {
+    total: total,
+    acquisitionShare: acquisitionShare,
+    automationShare: automationShare,
+    hasData: true
+  };
+}
+
+function getAcquisitionData_() {
+  var cache = CacheService.getScriptCache();
+  var cacheKey = 'OPS_DASH_ACQ_V1';
+  var cached = cache.get(cacheKey);
+  if (cached) {
+    return JSON.parse(cached);
+  }
+
+  var sheet = SpreadsheetApp.getActive().getSheetByName('Dados aquisição');
+  if (!sheet) return {};
+  var lastRow = sheet.getLastRow();
+  var lastColumn = sheet.getLastColumn();
+  if (lastRow < 2 || lastColumn < 1) return {};
+  var values = sheet.getRange(1, 1, lastRow, lastColumn).getValues();
+  if (!values || values.length < 2) return {};
+
+  var headers = values[0].map(function (h) { return String(h).trim(); });
+  var idx = getHeaderIndexMap_(headers);
+  var idxOp = findIndex_(idx, ['operacao']);
+  var idxMetric = findIndex_(idx, ['metrica', 'metric']);
+  var idxValue = findIndex_(idx, ['valor']);
+
+  if (idxOp == null || idxMetric == null || idxValue == null) {
+    return {};
+  }
+
+  var map = {};
+  for (var i = 1; i < values.length; i++) {
+    var row = values[i];
+    var op = String(row[idxOp] || '').trim();
+    if (!op) continue;
+    var metricKey = normalizeKey_(row[idxMetric]);
+    if (!metricKey) continue;
+    var value = toNumber_(row[idxValue]);
+
+    var entry = map[op] || { spend: 0, revenue: 0, hasSpend: false, hasRevenue: false };
+    if (metricKey === 'gasto') {
+      entry.spend = value;
+      entry.hasSpend = true;
+    } else if (metricKey === 'receita' || metricKey === 'receitta') {
+      entry.revenue = value;
+      entry.hasRevenue = true;
+    }
+    map[op] = entry;
+  }
+
+  Object.keys(map).forEach(function (op) {
+    var entry = map[op];
+    var spend = entry.hasSpend ? entry.spend : 0;
+    var revenue = entry.hasRevenue ? entry.revenue : 0;
+    var roas = spend > 0 ? (revenue / spend) - 1 : 0;
+    map[op] = {
+      spend: spend,
+      revenue: revenue,
+      roas: roas,
+      hasData: entry.hasSpend || entry.hasRevenue
+    };
+  });
+
+  cache.put(cacheKey, JSON.stringify(map), 300);
+  return map;
 }
 
 function buildOpsDashResponse_(dateObj, tz, operations) {
