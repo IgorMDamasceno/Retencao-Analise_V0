@@ -7,17 +7,17 @@
   <title>Dashboard | Operações</title>
   <style>
     :root{
-      --bg:#0b1220;
-      --card:#0f1b33;
-      --card2:#0c1730;
-      --card-soft: rgba(12, 23, 48, 0.65);
-      --text:#e7eefc;
-      --muted:#9ab0d6;
-      --border:rgba(255,255,255,.08);
-      --shadow: 0 20px 40px rgba(2,6,23,.55);
-      --card-outline: rgba(148, 163, 184, 0.18);
-      --card-glow: rgba(59, 130, 246, 0.18);
-      --card-inset: rgba(15, 23, 42, 0.65);
+      --bg:#0f172a;
+      --card:#0f172a;
+      --card2:#093c94;
+      --card-soft: rgba(15, 23, 42, 0.85);
+      --text:#e2e8f0;
+      --muted:#cbd5f5;
+      --border:rgba(51,65,85,.6);
+      --shadow: 0 18px 40px rgba(2,6,23,.65);
+      --card-outline: rgba(165, 180, 252, 0.45);
+      --card-glow: rgba(20, 67, 174, 0.35);
+      --card-inset: rgba(9, 60, 148, 0.3);
       --radius:18px;
       --good:#22c55e;
       --warn:#f59e0b;
@@ -103,9 +103,9 @@
     }
     .opcard{
       border:1px solid var(--card-outline);
-      background: linear-gradient(160deg, rgba(15,23,42,.9), rgba(12,23,48,.75));
+      background: linear-gradient(160deg, rgba(15,23,42,.98), rgba(9,60,148,.35));
       border-radius: var(--radius);
-      box-shadow: var(--shadow), inset 0 0 0 1px rgba(96,165,250,.12);
+      box-shadow: var(--shadow), inset 0 0 0 1px rgba(20,67,174,.25);
       overflow:hidden;
       position: relative;
     }
@@ -113,14 +113,14 @@
       content:'';
       position:absolute;
       inset:0;
-      background: radial-gradient(520px 260px at 10% 0%, rgba(59,130,246,.18), transparent 60%),
-                  radial-gradient(420px 220px at 95% 0%, rgba(34,197,94,.14), transparent 60%);
+      background: radial-gradient(520px 260px at 10% 0%, rgba(20,67,174,.35), transparent 60%),
+                  radial-gradient(420px 220px at 95% 0%, rgba(19,118,70,.25), transparent 60%);
       pointer-events:none;
     }
     .ophead{
       display:flex;align-items:center;justify-content:space-between;
       padding:14px 14px;
-      background: linear-gradient(120deg, rgba(15,23,42,.9), rgba(12,23,48,.65));
+      background: linear-gradient(120deg, rgba(15,23,42,.95), rgba(9,60,148,.35));
       border-bottom:1px solid var(--border);
       gap:10px;
     }
@@ -149,25 +149,25 @@
       .sections{grid-template-columns:1fr}
     }
     .section{
-      background: linear-gradient(180deg, rgba(11,18,32,.9), rgba(12,23,48,.75));
+      background: linear-gradient(180deg, rgba(15,23,42,.9), rgba(9,60,148,.2));
       border:1px solid var(--card-outline);
       border-radius: 16px;
       padding:12px;
       min-height: 116px;
       position: relative;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
+      box-shadow: inset 0 0 0 1px rgba(165,180,252,.12);
     }
     .section--auto{
-      border-color: rgba(96,165,250,.45);
-      box-shadow: inset 0 0 0 1px rgba(96,165,250,.18), 0 0 0 1px rgba(96,165,250,.08);
+      border-color: rgba(20,67,174,.6);
+      box-shadow: inset 0 0 0 1px rgba(20,67,174,.35), 0 0 0 1px rgba(20,67,174,.2);
     }
     .section--broadcast{
-      border-color: rgba(52,211,153,.4);
-      box-shadow: inset 0 0 0 1px rgba(52,211,153,.18), 0 0 0 1px rgba(52,211,153,.08);
+      border-color: rgba(19,118,70,.55);
+      box-shadow: inset 0 0 0 1px rgba(19,118,70,.3), 0 0 0 1px rgba(19,118,70,.2);
     }
     .section--acq{
-      border-color: rgba(251,191,36,.45);
-      box-shadow: inset 0 0 0 1px rgba(251,191,36,.2), 0 0 0 1px rgba(251,191,36,.1);
+      border-color: rgba(97,3,173,.55);
+      box-shadow: inset 0 0 0 1px rgba(97,3,173,.3), 0 0 0 1px rgba(97,3,173,.2);
     }
     .section .title{
       display:flex;align-items:center;justify-content:space-between;
@@ -185,19 +185,19 @@
       text-transform: uppercase;
     }
     .section--auto .tag{
-      background: rgba(96,165,250,.18);
-      border-color: rgba(96,165,250,.35);
-      color: #dbeafe;
+      background: rgba(20,67,174,.25);
+      border-color: rgba(20,67,174,.5);
+      color: #cbd5f5;
     }
     .section--broadcast .tag{
-      background: rgba(52,211,153,.18);
-      border-color: rgba(52,211,153,.35);
-      color: #dcfce7;
+      background: rgba(19,118,70,.25);
+      border-color: rgba(19,118,70,.5);
+      color: #e2e8f0;
     }
     .section--acq .tag{
-      background: rgba(251,191,36,.18);
-      border-color: rgba(251,191,36,.35);
-      color: #fef3c7;
+      background: rgba(97,3,173,.25);
+      border-color: rgba(97,3,173,.5);
+      color: #e2e8f0;
     }
     .kpis{
       display:grid;
@@ -206,11 +206,11 @@
     }
     .kpi{
       border:1px solid var(--card-outline);
-      background: linear-gradient(160deg, rgba(11,18,32,.9), rgba(15,23,42,.75));
+      background: linear-gradient(160deg, rgba(15,23,42,.95), rgba(9,60,148,.25));
       border-radius:14px;
       padding:10px 10px;
       min-width: 0;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,.03);
+      box-shadow: inset 0 0 0 1px rgba(165,180,252,.12);
     }
     .kpi .lbl{
       font-size:11px;color:var(--muted);margin-bottom:6px;
